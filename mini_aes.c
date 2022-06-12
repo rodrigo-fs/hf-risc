@@ -8,8 +8,14 @@
 #define XTEA_KEY3			(*(volatile uint32_t *)(XTEA_BASE + 0x040))
 #define XTEA_IN0			(*(volatile uint32_t *)(XTEA_BASE + 0x050))
 #define XTEA_IN1			(*(volatile uint32_t *)(XTEA_BASE + 0x060))
-#define XTEA_OUT0			(*(volatile uint32_t *)(XTEA_BASE + 0x070))
-#define XTEA_OUT1			(*(volatile uint32_t *)(XTEA_BASE + 0x080))
+#define XTEA_IN2			(*(volatile uint32_t *)(XTEA_BASE + 0x070))
+#define XTEA_IN3			(*(volatile uint32_t *)(XTEA_BASE + 0x080))
+#define XTEA_OUT0			(*(volatile uint32_t *)(XTEA_BASE + 0x090))
+#define XTEA_OUT1			(*(volatile uint32_t *)(XTEA_BASE + 0x0A0))
+#define XTEA_OUT2			(*(volatile uint32_t *)(XTEA_BASE + 0x0B0))
+#define XTEA_OUT3		    (*(volatile uint32_t *)(XTEA_BASE + 0x0C0))
+
+
 
 /*
 XTEA encryption algorithm
@@ -47,10 +53,10 @@ void decipher(uint32_t num_rounds, uint32_t v[2], uint32_t const key[4]){
 }
 
 int main(void){
-	uint32_t msg[2] = {0x12345678, 0x90123456};
+	uint32_t msg[4] = {0x12345678, 0x90123456, 0x78901234, 0x56789012};
 	uint32_t cycles;
 
-	printf("message: %8x%8x\n", msg[0], msg[1]);
+	/*printf("message: %8x%8x\n", msg[0], msg[1]);
 	cycles = TIMER0;
 	encipher(32, msg, xtea_key);
 	cycles = TIMER0 - cycles;
@@ -61,8 +67,8 @@ int main(void){
 	printf("decipher: %8x%8x, %d cycles\n", msg[0], msg[1], cycles);
 
 	printf("message: %8x%8x\n", msg[0], msg[1]);
-
-	XTEA_CONTROL = 0x2;
+    */
+	XTEA_CONTROL = 0x0;
 	XTEA_KEY0 = xtea_key[0];
 	XTEA_KEY1 = xtea_key[1];
 	XTEA_KEY2 = xtea_key[2];
@@ -71,30 +77,39 @@ int main(void){
 	cycles = TIMER0;
 	XTEA_IN0 = msg[0];
 	XTEA_IN1 = msg[1];
-	XTEA_CONTROL = 0x3;
+	XTEA_IN2 = msg[2];
+    XTEA_IN3 = msg[3];
+    //XTEA_CONTROL = 0x3;
 	while (!(XTEA_CONTROL & 0x4));
 	XTEA_CONTROL = 0x0;
 	cycles = TIMER0 - cycles;
 
 	msg[0] = XTEA_OUT0;
 	msg[1] = XTEA_OUT1;
+	msg[2] = XTEA_OUT2;
+	msg[3] = XTEA_OUT3;
+ 	printf("encipher: %8x%8x%8x%8x, %d cycles\n", msg[0], msg[1], msg[2], msg[3], cycles);
 
-	printf("encipher: %8x%8x, %d cycles\n", msg[0], msg[1], cycles);
+	XTEA_CONTROL = 0x2;
+	XTEA_KEY0 = xtea_key[0];
+	XTEA_KEY1 = xtea_key[1];
+	XTEA_KEY2 = xtea_key[2];	
+	XTEA_KEY3 = xtea_key[3];
 
 	cycles = TIMER0;
-
 	XTEA_IN0 = msg[0];
 	XTEA_IN1 = msg[1];
-	XTEA_CONTROL = 0x1;
+	XTEA_IN2 = msg[2];
+	XTEA_IN3 = msg[3];
 	while (!(XTEA_CONTROL & 0x4));
-	XTEA_CONTROL = 0x0;
 
 	cycles = TIMER0 - cycles;
 
 	msg[0] = XTEA_OUT0;
 	msg[1] = XTEA_OUT1;
-
-	printf("decipher: %8x%8x, %d cycles\n", msg[0], msg[1], cycles);
+	msg[2] = XTEA_OUT2;
+	msg[3] = XTEA_OUT3;
+	printf("decipher: %8x%8x%8x%8x, %d cycles\n", msg[0], msg[1], msg[2], msg[3], cycles);
 
 	return 0;
 }
